@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analogne Sat</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #5b9be4; /* Pozadina stranice */
+        }
+        #clockCanvas {
+            border: #0a0a0a 0px solid; /* Postavite obod ako je potrebno */
+            width: 700px; /* Širina platna */
+            height: 700px; /* Visina platna */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="clockCanvas" width="700" height="700"></canvas>
+    <script>
+        // Globalne promenljive
+        let myCanvas, ctx, clockRadius;
+
+        // Funkcija za inicijalizaciju platna i pokretanje petlje za ažuriranje sata
+        function draw() {
+            myCanvas = document.getElementById('clockCanvas');
+            if (myCanvas.getContext) {
+                ctx = myCanvas.getContext('2d');
+                clockRadius = myCanvas.width / 2 * 0.8; // Smanjen radijus kruga da ne bi ispao kockast na krajevima
+                ctx.translate(myCanvas.width / 2, myCanvas.height / 2); // Centriranje konteksta crtanja
+                update(); // Pokretanje petlje za ažuriranje
+            } else {
+                alert("Canvas nije podržan.");
+            }
+        }
+
+        // Funkcija za crtanje lica sata i brojeva
+        function drawClock() {
+            drawFace(ctx, clockRadius);
+            drawNumbers(ctx, clockRadius);
+        }
+
+        // Funkcija za crtanje lica sata (spoljni krug i centar)
+        function drawFace(ctx, clockRadius) {
+            let grad;
+
+            // Crtanje spoljnog kruga
+            ctx.beginPath();
+            ctx.arc(0, 0, clockRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#33c7d1'; // Boja lica sata
+            ctx.fill();
+
+            // Kreiranje gradijenta za obod
+            grad = ctx.createRadialGradient(0, 0, clockRadius * 0.95, 0, 0, clockRadius * 1.05);
+            grad.addColorStop(0, '#a420e7'); // Tamna lila boja
+            grad.addColorStop(0.5, '#c2a9cf'); // Svetla lila boja
+            grad.addColorStop(1, '#a420e7'); // Tamna lila boja
+
+            // Primena gradijenta i crtanje oboda
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = clockRadius * 0.125; // Povećanje širine linije
+            ctx.stroke();
+
+            // Crtanje centar kruga
+            ctx.beginPath();
+            ctx.arc(0, 0, clockRadius * 0.06, 0, 2 * Math.PI);
+            ctx.fillStyle = '#333'; // Tamno siva boja
+            ctx.fill();
+        }
+
+        // Funkcija za crtanje brojeva na satu
+        function drawNumbers(ctx, clockRadius) {
+            let ang;
+            let num;
+            ctx.font = clockRadius * 0.15 + 'px Arial';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#7e34a3'; // Boja brojeva
+            for (num = 1; num < 13; num++) {
+                ang = num * Math.PI / 6;
+                ctx.rotate(ang);
+                ctx.translate(0, -clockRadius * 0.85);
+                ctx.rotate(-ang);
+                ctx.fillText(num.toString(), 0, 0);
+                ctx.rotate(ang);
+                ctx.translate(0, clockRadius * 0.85);
+                ctx.rotate(-ang);
+            }
+        }
+
+        // Funkcija za crtanje kazaljki sata (sati i minuti)
+        function drawHands() {
+            let hourAngle = ((new Date().getHours() % 12) + new Date().getMinutes() / 60) * 30;
+            let minuteAngle = (new Date().getMinutes() + new Date().getSeconds() / 60) * 6;
+
+            drawHand(hourAngle, clockRadius * 0.5, clockRadius * 0.07, '#333'); // Kazaljka za sate
+            drawHand(minuteAngle, clockRadius * 0.8, clockRadius * 0.07, '#333'); // Kazaljka za minute
+        }
+
+        // Funkcija za crtanje jedne kazaljke sata
+        function drawHand(angle, length, width, color) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = color;
+            ctx.rotate((Math.PI / 180) * angle);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -length);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Funkcija za ažuriranje sata svake sekunde
+        function update() {
+            ctx.save();
+            ctx.clearRect(-myCanvas.width / 2, -myCanvas.height / 2, myCanvas.width, myCanvas.height); // Čišćenje platna
+            drawClock(); // Ponovno crtanje lica sata i brojeva
+            drawHands(); // Ponovno crtanje kazaljki
+
+            // Kazaljka sekundi
+            let angle = new Date().getSeconds() * 6; // Izračunavanje ugla za kazaljku sekundi
+            ctx.save();
+            ctx.rotate((Math.PI / 180) * angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -clockRadius * 0.9); // Produžena kazaljka sekundi
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#E7207D'; // Boja kazaljke sekundi
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.restore();
+            setTimeout(update, 1000); // Ažuriranje sata svake sekunde
+        }
+
+        window.onload = draw; // Inicijalizacija sata kada se stranica učita
+    </script>
+</body>
+</html>
